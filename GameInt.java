@@ -3,9 +3,21 @@ import java.rmi.RemoteException;
 
 public interface GameInt extends Remote {
 
-    public void addPlayer(GameInt player) throws RemoteException;
+    public boolean addPlayer(GameInt player) throws RemoteException;
 
-    public void yourTurn() throws RemoteException;
+    public int yourTurn() throws RemoteException;
 
-    public void makePlay(int location) throws RemoteException;
+    public boolean makePlay(int play) throws RemoteException;
+
+    public void broadcastPlay(int play) throws RemoteException;
+
+    public GameState getGameState() throws RemoteException;
+
+    public void setLeader() throws RemoteException;
+
+    public void turnStarts() throws RemoteException;
+
+    public void printBoard() throws RemoteException;
+
+    public void endGame() throws RemoteException;
 }

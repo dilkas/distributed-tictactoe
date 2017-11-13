@@ -58,6 +58,6 @@ public class GameState implements Serializable {
             }
             representation += "\n";
         }
-        return representation + "Your sign: " + nextSign + "\n";
+        return representation;
     }
 }
