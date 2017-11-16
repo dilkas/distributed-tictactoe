@@ -1,17 +1,18 @@
 import java.rmi.RemoteException;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.PriorityBlockingQueue;
+
 
 public class Leader extends Role {
 
     // The local Game instance is here as well.
     // Synchronize whenever using this list.
-    private List<GameInt> myTeam;
+    // private List<GameInt> myTeam; --> moved to Role
 
-    public Leader(List<GameInt> team) {
-        myTeam = team;
+    public Leader(GameInt leader,GameInt opponentLeader,PriorityBlockingQueue<GameInt> team) {
+        super(leader,opponentLeader,team);
     }
 
     public synchronized boolean addPlayer(GameInt player) throws RemoteException {
@@ -19,7 +20,7 @@ public class Leader extends Role {
             leader = player;
             return true;
         }
-        myTeam.add(player);
+        team.add(player);
         return false;
     }
 
@@ -28,7 +29,7 @@ public class Leader extends Role {
         int[] votes = new int[9];
         synchronized (this) {
             // TODO: make this asynchronous (important)
-            for (GameInt player : myTeam)
+            for (GameInt player : team)
                 votes[player.yourTurn()]++;
         }
 
@@ -60,17 +61,18 @@ public class Leader extends Role {
         // TODO: (optional) start a new game or something?
         // FIXME: regular players don't exit
         boolean gameOver = false;
-        for (GameInt player : myTeam)
+        for (GameInt player : team)
             gameOver = player.makePlay(play);
         if (gameOver) {
             leader = null;
-            if (myTeam.size() > 1)
-                for (GameInt player : myTeam.subList(1, myTeam.size() - 1))
+            if (team.size() > 1)
+//                for (GameInt player : team.subList(1, team.size() - 1))
+                for (GameInt player : team)
                     player.endGame();
 
             // End the local game last. TODO: I don't thing this matters. Test and simplify if possible.
-            myTeam.get(0).endGame();
-            myTeam = null;
+            team.poll().endGame();
+            team = null;
         }
     }
 }
