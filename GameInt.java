@@ -5,7 +5,7 @@ public interface GameInt extends Remote {
 
     public boolean addPlayer(GameInt player) throws RemoteException;
 
-    public int yourTurn() throws RemoteException;
+    public int askForInput() throws RemoteException;
 
     public boolean makePlay(int play) throws RemoteException;
 

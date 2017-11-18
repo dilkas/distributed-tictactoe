@@ -2,26 +2,29 @@ import java.io.IOException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
-import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
 
 public class Game extends UnicastRemoteObject implements GameInt {
-    // TODO: Reorder the methods. Right now the order is chronological/arbitrary.
-    // TODO: Make role public
-    // TODO: More (and more accurate) comments
 
+    /** Serial version UID to avoid warning. */
+    private static final long serialVersionUID = 42L;
+    /** Address of host machine. */
     private static final String HOST = "localhost";
+    /** Port number of the game. */
     private static final int PORT = 1099;
 
+    /** Holds the combined IP, port and server/client name address of this instance. */
     private String myUrl;
     private Scanner input;
     private GameState gameState;
+    /** Identifies the role of this instance. */
     private Role role;
 
+
+    /** Constructors */
     public Game(String url) throws RemoteException {
         myUrl = url;
         input = new Scanner(System.in);
@@ -35,13 +38,8 @@ public class Game extends UnicastRemoteObject implements GameInt {
         this.gameState = gameState;
     }
 
-    public boolean addPlayer(GameInt player) throws RemoteException {
-        return role.addPlayer(player);
-    }
-
-    /** Asks the user to make a play and returns it. */
-    public int yourTurn() throws RemoteException {
-        // TODO: perhaps rename this function to something more appropriate
+    /** Ask the user to make a play and return it. */
+    public int askForInput() throws RemoteException {
         int play = -1;
         while (!gameState.valid(play)) {
             System.out.print("Your sign: " + gameState.nextSign + ". Choose a number in [0, 8]: ");
@@ -50,43 +48,38 @@ public class Game extends UnicastRemoteObject implements GameInt {
         return play;
     }
 
-    /** Receives a play and updates the game state. Returns true if the game is over. */
+    /** Receive a play and update the game state. Return true if the game is over. */
     public boolean makePlay(int play) throws RemoteException {
         boolean gameOver = gameState.makePlay(play);
         System.out.println(gameState);
         return gameOver;
     }
 
+    /** End the game. */
     public void endGame() throws RemoteException {
         input.close();
         try {
             Naming.unbind(myUrl);
         } catch (Exception e) {
-            // Mainly for NotBoundException. Right now this clause is executed for every instance except the first one.
-            // TODO: Rewrite it so that it's never executed.
+            e.printStackTrace();
         }
         UnicastRemoteObject.unexportObject(this, true);
         System.out.println("Game over.");
     }
 
-    public void broadcastPlay(int play) throws RemoteException {
-        role.broadcastPlay(play);
+    /** Paste the current game on screen. */
+    public void printBoard() throws RemoteException {
+        System.out.println(gameState);
     }
 
+    /** Accessor methods */
     public GameState getGameState() throws RemoteException {
         return gameState;
     }
 
-    /** Make this instance into a leader and initialise the team list */
-    public void setLeader(List<GameInt> team) throws RemoteException {
-        this.role = new Leader(team);
-        System.out.println("I am a leader now.");
-    }
-
-    public void setLeader() throws RemoteException {
-        List<GameInt> initialTeam = new LinkedList<>();
-        initialTeam.add(this);
-        setLeader(initialTeam);
+    /** Role access classes */
+    public boolean addPlayer(GameInt player) throws RemoteException {
+        return role.addPlayer(player);
     }
 
     public void setLeader(GameInt somePlayer) throws RemoteException {
@@ -97,8 +90,21 @@ public class Game extends UnicastRemoteObject implements GameInt {
         role.turnStarts();
     }
 
-    public void printBoard() throws RemoteException {
-        System.out.println(gameState);
+    public void broadcastPlay(int play) throws RemoteException {
+        role.broadcastPlay(play);
+    }
+
+    /** Make this instance into a leader and initialise the team list. */
+    public void setLeader(List<GameInt> team) throws RemoteException {
+        this.role = new Leader(team);
+        System.out.println("I am a leader now.");
+    }
+
+    /** Make this instance into a leader of a brand new game. */
+    public void setLeader() throws RemoteException {
+        List<GameInt> initialTeam = new LinkedList<>();
+        initialTeam.add(this);
+        setLeader(initialTeam);
     }
 
     public static void main(String[] args)throws IOException {
@@ -114,11 +120,10 @@ public class Game extends UnicastRemoteObject implements GameInt {
         String myUrl = "//" + HOST + ":" + PORT + "/" + args[0];
         GameInt game;
 
-        // TODO: If this instance successfully connects to a server, it cannot add new players. Perhaps it's not
-        // necessary to fix this, but then addPlayer() functionality should be updated.
         try {
             GameInt server = (GameInt) Naming.lookup("//" + args[2] + ":" + PORT + "/" + args[1]);
             game = new Game(myUrl, server.getGameState());
+            Naming.rebind(myUrl, game);
             boolean leader = server.addPlayer(game); // am I a leader?
             System.out.println("Successfully connected to the server.");
             if (leader) {

@@ -2,6 +2,9 @@ import java.io.Serializable;
 
 public class GameState implements Serializable {
 
+    /** Serial version UID to avoid warning. */
+    private static final long serialVersionUID = 53L;
+
     private enum Sign {
         EMPTY, X, O;
     };

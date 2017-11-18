@@ -1,13 +1,14 @@
 import java.rmi.RemoteException;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicIntegerArray;
 
 public class Leader extends Role {
 
     // The local Game instance is here as well.
     // Synchronize whenever using this list.
+    // TODO: use a data structure that support concurrency and remove all the 'synchronized' keywords
     private List<GameInt> myTeam;
 
     public Leader(List<GameInt> team) {
@@ -23,24 +24,38 @@ public class Leader extends Role {
         return false;
     }
 
+    /** Collect the votes from the team and decide on a play. */
     public void turnStarts() throws RemoteException {
-        // Gather the votes
-        int[] votes = new int[9];
+        AtomicIntegerArray votes = new AtomicIntegerArray(9);
+        int counter = 0;
+        VoteThread[] voteCollectors;
         synchronized (this) {
-            // TODO: make this asynchronous (important)
+            int teamSize = myTeam.size();
+            voteCollectors = new VoteThread[teamSize];
             for (GameInt player : myTeam)
-                votes[player.yourTurn()]++;
+                voteCollectors[counter++] = new VoteThread(player, votes);
+        }
+
+        for (VoteThread thread : voteCollectors)
+            thread.start();
+
+        for (VoteThread thread : voteCollectors) {
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
 
         // Choose the winning play, breaking ties randomly
         List<Integer> maxIndices = new ArrayList<>();
         int maxVotes = 0;
         for (int i = 0; i < 9; i++) {
-            if (votes[i] > maxVotes) {
+            if (votes.get(i) > maxVotes) {
                 maxIndices = new ArrayList<>();
-                maxVotes = votes[i];
+                maxVotes = votes.get(i);
             }
-            if (votes[i] == maxVotes)
+            if (votes.get(i) == maxVotes)
                 maxIndices.add(i);
         }
         int play = maxIndices.get(new Random().nextInt(maxIndices.size()));
