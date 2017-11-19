@@ -13,11 +13,37 @@ public interface GameInt extends Remote {
 
     public GameState getGameState() throws RemoteException;
 
-    public void setLeader() throws RemoteException;
+//    public void setLeader() throws RemoteException;
+
+//    public void setLeader(GameInt leader,GameInt opponent) throws RemoteException;
 
     public void turnStarts() throws RemoteException;
 
     public void printBoard() throws RemoteException;
 
     public void endGame() throws RemoteException;
+
+
+
+
+    /**
+     *
+     *  Bully Algorithm Interface
+     *
+     * */
+
+    // Leaders of each team will be the oldest players joined the game
+    // If player not oldest:
+    //       if timeoutElection then consider itself coordinator
+    //       if timeoutCoordinator then start another election
+    public int timeoutElection = 10, timeoutCoordinator = 10;
+
+
+    // Use this to start an election from oldest processes than you
+    // Response is used for the timeout in the calling process
+    public boolean startElection() throws RemoteException;
+
+
+    // Use this to broadcast to all the processes in your team & opponent leader , about the new leader
+    public void declareLeader(GameInt leader) throws RemoteException;
 }

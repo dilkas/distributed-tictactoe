@@ -20,7 +20,7 @@ public class Leader extends Role {
             leader = player;
             return true;
         }
-        team.add(player);
+//        team.add(player);
         return false;
     }
 
