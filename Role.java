@@ -12,6 +12,11 @@ public abstract class Role{
     protected GameInt opponentLeader;                  // Current Opponent Leader
     protected PriorityBlockingQueue<GameInt> team;     // My Team
 
+    // Temporary for conflicting Leader call constructor
+    public Role(PriorityBlockingQueue<GameInt> team){
+        this.team = team;
+    }
+
     /** Used by the subclasses */
     public Role(GameInt leader,GameInt opponentLeader,PriorityBlockingQueue<GameInt> team){
         this.leader = leader;

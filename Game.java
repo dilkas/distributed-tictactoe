@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.PriorityBlockingQueue;
 
-
 public class Game extends UnicastRemoteObject implements GameInt {
     // TODO: Reorder the methods. Right now the order is chronological/arbitrary.
     // TODO: Make role public
@@ -23,27 +22,19 @@ public class Game extends UnicastRemoteObject implements GameInt {
     private Scanner input;
     private GameState gameState;
     private Role role;
-//    private int id;
-//    private static int idCount = 0;
 
     public Game(String url) throws RemoteException {
         myUrl = url;
         input = new Scanner(System.in);
         gameState = new GameState();
-//        id = idCount++;
         setLeader();
     }
 
     public Game(String url, GameState gameState) throws RemoteException {
         myUrl = url;
         input = new Scanner(System.in);
-//        id = idCount++;
         this.gameState = gameState;
     }
-
-//    public int getId(){
-//        return id;
-//    }
 
     public boolean addPlayer(GameInt player) throws RemoteException {
         return role.addPlayer(player);
@@ -79,6 +70,16 @@ public class Game extends UnicastRemoteObject implements GameInt {
         System.out.println("Game over.");
     }
 
+    @Override
+    public boolean startElection() throws RemoteException {
+        return role.startElection();
+    }
+
+    @Override
+    public void declareLeader(GameInt leader) throws RemoteException {
+        role.leader = leader;
+    }
+
     public void broadcastPlay(int play) throws RemoteException {
         role.broadcastPlay(play);
     }
@@ -88,15 +89,15 @@ public class Game extends UnicastRemoteObject implements GameInt {
     }
 
     /** Make this instance into a leader and initialise the team list */
-    public void setLeader(GameInt leader,GameInt opponentLeader,PriorityBlockingQueue<GameInt> team) throws RemoteException {
-        this.role = new Leader(leader,opponentLeader,team);
+    public void setLeader(PriorityBlockingQueue<GameInt> team) throws RemoteException {
+        this.role = new Leader(team);
         System.out.println("I am a leader now.");
     }
 
     public void setLeader() throws RemoteException {
-        PriorityBlockingQueue<GameInt> initialTeam = new PriorityBlockingQueue<>(10,new GameIntComparator());
+        PriorityBlockingQueue<GameInt> initialTeam = new PriorityBlockingQueue<>();
         initialTeam.add(this);
-        setLeader(this,null,initialTeam);
+        setLeader(initialTeam);
     }
 
     public void setLeader(GameInt somePlayer) throws RemoteException {
@@ -131,7 +132,7 @@ public class Game extends UnicastRemoteObject implements GameInt {
             game = new Game(myUrl, server.getGameState());
             boolean leader = server.addPlayer(game); // am I a leader?
             System.out.println("Successfully connected to the server.");
-            if (!leader) {
+            if (leader) {
                 game.setLeader();
                 game.addPlayer(server);
                 game.printBoard();

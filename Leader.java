@@ -11,6 +11,10 @@ public class Leader extends Role {
     // Synchronize whenever using this list.
     // private List<GameInt> myTeam; --> moved to Role
 
+    public Leader(PriorityBlockingQueue<GameInt> team) {
+        this.team = team;
+    }
+
     public Leader(GameInt leader,GameInt opponentLeader,PriorityBlockingQueue<GameInt> team) {
         super(leader,opponentLeader,team);
     }

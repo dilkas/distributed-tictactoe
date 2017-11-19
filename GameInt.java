@@ -13,7 +13,7 @@ public interface GameInt extends Remote {
 
     public GameState getGameState() throws RemoteException;
 
-//    public void setLeader() throws RemoteException;
+    public void setLeader() throws RemoteException;
 
 //    public void setLeader(GameInt leader,GameInt opponent) throws RemoteException;
 
