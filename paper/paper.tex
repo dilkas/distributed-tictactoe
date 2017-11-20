@@ -158,6 +158,7 @@
 % systems. The latest version and documentation can be obtained at:
 % http://www.ctan.org/pkg/url
 % Basically, \url{my_url_here}.
+\usepackage{graphicx}
 
 \begin{document}
 
@@ -288,8 +289,15 @@ the way they are handled. The finished product can serve to entertain the end us
 \section{System Design}
 Tic Tac Toe is a simple game played on a grid of 3x3, consisting of two players. One player uses an “X” marker and the other player uses an “O” marker to select a grid space to occupy. The objective of the game is to take turns until one player manages to occupy three grid spaces in a straight line, be it horizontal, vertical or diagonal.
 
-The proposed design takes this simple concept and uses it to demonstrate a distributed system, whereby the two “players” are instead two teams of up to 5 players, which take turns to vote on where their team should place their markers. Each team has a designated "leader" which communicates data with their team's peers, and the opposing team's "leader" to synchronise current gameplay state. The leaders communicate the vote of their team to the opposing leader so that they may pass that result on to the peers of that team.
+The proposed design takes this simple concept and uses it to demonstrate a distributed system, whereby the two “players” are instead two teams of up to 5 players, which take turns to vote on where their team should place their markers. Each team has a designated "leader" which communicates data with their team's peers, and the opposing team's "leader" to synchronise current gameplay state.
 
+\begin{figure}[h]
+	\includegraphics[width=\linewidth]{images/DAS-topology.png}
+	\caption{Topology for Distributed Tic Tac Toe}
+	\label{fig:topology1}
+\end{figure}
+
+The leaders communicate the vote of their team to the opposing leader so that they may pass that result on to the peers of that team, as pictured in figure 1.
 \section{Implementation}
 
 \section{Evaluation}
