@@ -36,6 +36,7 @@ public class Game extends UnicastRemoteObject implements GameInt {
         myUrl = url;
         input = new Scanner(System.in);
         this.gameState = gameState;
+        role = new Player();
     }
 
     /** Ask the user to make a play and return it. */
