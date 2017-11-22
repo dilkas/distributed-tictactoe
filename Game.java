@@ -40,7 +40,7 @@ public class Game extends UnicastRemoteObject implements GameInt {
 
     /** Ask the user to make a play and return it. */
     public int askForInput() throws RemoteException {
-        if(role.getClass().getName() == "Player") {
+        if(role instanceof Player) {
         	role.schedule();
         } 
     	int play = -1;
