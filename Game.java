@@ -40,10 +40,9 @@ public class Game extends UnicastRemoteObject implements GameInt {
 
     /** Ask the user to make a play and return it. */
     public int askForInput() throws RemoteException {
-        if(role instanceof Player) {
-        	role.schedule();
-        } 
-    	int play = -1;
+        if(role instanceof Player)
+            role.schedule();
+        int play = -1;
         while (!gameState.valid(play)) {
             System.out.print("Your sign: " + gameState.nextSign + ". Choose a number in [0, 8]: ");
             play = input.nextInt();
@@ -53,7 +52,7 @@ public class Game extends UnicastRemoteObject implements GameInt {
 
     /** Receive a play and update the game state. Return true if the game is over. */
     public boolean makePlay(int play) throws RemoteException {
-    	boolean gameOver = gameState.makePlay(play);
+        boolean gameOver = gameState.makePlay(play);
         System.out.println(gameState);
         return gameOver;
     }
@@ -85,10 +84,6 @@ public class Game extends UnicastRemoteObject implements GameInt {
         return role.addPlayer(player);
     }
 
-    public void setLeader(GameInt somePlayer) throws RemoteException {
-        role.setLeader(somePlayer);
-    }
-
     public void turnStarts() throws RemoteException {
         role.turnStarts();
     }
@@ -97,7 +92,12 @@ public class Game extends UnicastRemoteObject implements GameInt {
         role.broadcastPlay(play);
     }
 
-    /** Make this instance into a leader of a brand new game. */
+    /** Update the leader reference. */
+    public void setLeader(GameInt somePlayer) throws RemoteException {
+        role.setLeader(somePlayer);
+    }
+
+    /** Make this instance into a leader with a given team. */
     public void setLeader(List<GameInt> team) throws RemoteException {
         this.role = new Leader(team);
         System.out.println("I am a leader now.");
@@ -109,8 +109,8 @@ public class Game extends UnicastRemoteObject implements GameInt {
         initialTeam.add(this);
         setLeader(initialTeam);
     }
-    
-    /** Make this instance into a regular player */
+
+    /** Make this instance into a regular player and initialise the leader reference. */
     public void setAsPlayer(GameInt leader) throws RemoteException {
         this.role = new Player(leader);
     }
@@ -140,7 +140,7 @@ public class Game extends UnicastRemoteObject implements GameInt {
                 game.printBoard();
                 game.turnStarts();
             } else {
-            	game.setAsPlayer(leader);
+                game.setAsPlayer(leader);
             }
         } catch (NotBoundException e) {
             // Failed to connect. Must be player 1.

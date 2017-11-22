@@ -15,13 +15,14 @@ public class Leader extends Role {
         myTeam = team;
     }
 
+    /** Adds a new player to the game. Returns null if the new player becomes the enemy leader and the  */
     public synchronized GameInt addPlayer(GameInt player) throws RemoteException {
         if (leader == null) {
             leader = player;
             return null;
         }
         myTeam.add(player);
-        return (GameInt) this;
+        return myTeam.get(0);
     }
 
     /** Collect the votes from the team and decide on a play. */

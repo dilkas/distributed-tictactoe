@@ -17,7 +17,7 @@ public abstract class Role {
     public void setLeader(GameInt somePlayer) {
         leader = somePlayer;
     }
-    
+
     public abstract void schedule();
 
     /** Regular players ignore this. */
