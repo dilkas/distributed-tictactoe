@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicIntegerArray;
 public class Leader extends Role {
 
     // The local Game instance is here as well.
-    // Synchronize whenever using this list.
+    // Synchronise whenever using this list.
     // TODO: use a data structure that support concurrency and remove all the 'synchronized' keywords
     private List<GameInt> myTeam;
 
@@ -15,13 +15,14 @@ public class Leader extends Role {
         myTeam = team;
     }
 
-    public synchronized boolean addPlayer(GameInt player) throws RemoteException {
+    /** Adds a new player to the game. Returns null if the new player becomes the enemy leader and the  */
+    public synchronized GameInt addPlayer(GameInt player) throws RemoteException {
         if (leader == null) {
             leader = player;
-            return true;
+            return null;
         }
         myTeam.add(player);
-        return false;
+        return myTeam.get(0);
     }
 
     /** Collect the votes from the team and decide on a play. */
@@ -88,4 +89,9 @@ public class Leader extends Role {
             myTeam = null;
         }
     }
+
+	public void schedule() {
+		// Schedule Timer to record last response of each regular player on team
+		// If idle for more than x minutes, delete from team and inform other members to remove reference
+	}
 }
