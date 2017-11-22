@@ -11,7 +11,8 @@ public abstract class Role {
     public abstract GameInt addPlayer(GameInt player) throws RemoteException;
 
     /** A leader overrides this, a regular player does nothing */
-    public void broadcastPlay(int play) throws RemoteException {
+    public boolean broadcastPlay(int play) throws RemoteException {
+        return false;
     }
 
     public void setLeader(GameInt somePlayer) {
@@ -22,5 +23,8 @@ public abstract class Role {
 
     /** Regular players ignore this. */
     public void turnStarts() throws RemoteException {
+    }
+
+    public void cancelTimer() {
     }
 }

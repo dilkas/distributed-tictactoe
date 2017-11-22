@@ -62,32 +62,19 @@ public class Leader extends Role {
         int play = maxIndices.get(new Random().nextInt(maxIndices.size()));
 
         leader.broadcastPlay(play);
-        broadcastPlay(play);
 
-        // Necessary because of the current implementation for ending the game.
-        // Might be unnecessary in the future.
-        if (leader != null)
+        // Broadcast the play. If the game is not over, start a new turn
+        if (!broadcastPlay(play))
             leader.turnStarts();
     }
 
     @Override
-    public synchronized void broadcastPlay(int play) throws RemoteException {
+    public synchronized boolean broadcastPlay(int play) throws RemoteException {
         // TODO: treat winning and losing differently
-        // TODO: (optional) start a new game or something?
-        // FIXME: regular players don't exit
         boolean gameOver = false;
         for (GameInt player : myTeam)
             gameOver = player.makePlay(play);
-        if (gameOver) {
-            leader = null;
-            if (myTeam.size() > 1)
-                for (GameInt player : myTeam.subList(1, myTeam.size() - 1))
-                    player.endGame();
-
-            // End the local game last. TODO: I don't thing this matters. Test and simplify if possible.
-            myTeam.get(0).endGame();
-            myTeam = null;
-        }
+        return gameOver;
     }
 
 	public void schedule() {

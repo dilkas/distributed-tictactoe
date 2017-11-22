@@ -21,5 +21,4 @@ public interface GameInt extends Remote {
 
     public void printBoard() throws RemoteException;
 
-    public void endGame() throws RemoteException;
 }

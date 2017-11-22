@@ -50,4 +50,8 @@ public class Player extends Role {
             //raiseElection();
         }
     }
+
+    public void cancelTimer() {
+        timer.cancel();
+    }
 }

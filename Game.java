@@ -54,19 +54,18 @@ public class Game extends UnicastRemoteObject implements GameInt {
     public boolean makePlay(int play) throws RemoteException {
         boolean gameOver = gameState.makePlay(play);
         System.out.println(gameState);
-        return gameOver;
-    }
-
-    /** End the game. */
-    public void endGame() throws RemoteException {
-        input.close();
-        try {
-            Naming.unbind(myUrl);
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (gameOver) {
+            input.close();
+            role.cancelTimer();
+            try {
+                Naming.unbind(myUrl);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            UnicastRemoteObject.unexportObject(this, true);
+            System.out.println("Game over.");
         }
-        UnicastRemoteObject.unexportObject(this, true);
-        System.out.println("Game over.");
+        return gameOver;
     }
 
     /** Paste the current game on screen. */
