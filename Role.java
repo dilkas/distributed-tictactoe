@@ -32,15 +32,6 @@ public abstract class Role{
     /** Returns true if the added player is a leader */
     public abstract boolean addPlayer(GameInt player) throws RemoteException;
 
-    /** Returns true if the added player is an opponent leader*/
-    public synchronized boolean addOpponent(GameInt player) throws RemoteException{
-        if (opponentLeader == null) {
-            opponentLeader = player;
-            return true;
-        }
-        team.add(player);
-        return false;
-    }
 
     /** A leader overrides this, a regular player does nothing */
     public void broadcastPlay(int play) throws RemoteException {
