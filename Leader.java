@@ -12,7 +12,7 @@ public class Leader extends Role {
     // private List<GameInt> myTeam; --> moved to Role
 
     public Leader(PriorityBlockingQueue<GameInt> team) {
-        this.team = team;
+        super(team);
     }
 
     public Leader(GameInt leader,GameInt opponentLeader,PriorityBlockingQueue<GameInt> team) {

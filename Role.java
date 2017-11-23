@@ -53,25 +53,32 @@ public abstract class Role{
     // False indicates leader has no "greater" leaders
     // True indicates leader has started another election
     // No response assume other process crashed -- Use timeout when calling it
-    public boolean startElection() throws RemoteException {
+    public boolean startElection(GameInt myGameInt) throws RemoteException {
         // Start an election to my team
         GameInt[] myTeam = (GameInt[]) this.team.toArray();
         ArrayList<Boolean> responses = new ArrayList<>();
+        responses.add(false);                                // No other leader
         int currentGameInt = 0;
 
-        while(this.hashCode() < myTeam[currentGameInt].hashCode() && (currentGameInt<myTeam.length)){
-            responses.add(myTeam[currentGameInt].startElection());
+        while(myGameInt.hashCode() < myTeam[currentGameInt].hashCode() && (currentGameInt<myTeam.length)){
+            boolean anotherLeaderExists = responses.remove(0);
+            responses.add(myTeam[currentGameInt].startElection(myTeam[currentGameInt]) && anotherLeaderExists);
             currentGameInt++;
         }
-        // No more leaders set me as leader
-        if (responses.size() == 0){
-            return false;
+        // No more leaders set me as leader to the rest and the leader
+        if (responses.get(0) == false){
+            for (GameInt player: myTeam) {
+                player.declareLeader(myGameInt);
+            }
+            opponentLeader.declareLeader(myGameInt);
         }
-        return true;
+
+        return responses.get(0);
     }
 
 
     public void declareLeader(GameInt leader) throws RemoteException {
         this.leader = leader;
     }
+
 }

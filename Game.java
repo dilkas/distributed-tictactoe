@@ -71,8 +71,8 @@ public class Game extends UnicastRemoteObject implements GameInt {
     }
 
     @Override
-    public boolean startElection() throws RemoteException {
-        return role.startElection();
+    public boolean startElection(GameInt thisGameInt) throws RemoteException {
+        return role.startElection(thisGameInt);
     }
 
     @Override
@@ -90,7 +90,7 @@ public class Game extends UnicastRemoteObject implements GameInt {
 
     /** Make this instance into a leader and initialise the team list */
     public void setLeader(PriorityBlockingQueue<GameInt> team) throws RemoteException {
-        this.role = new Leader(team);
+        this.role = new Leader(team);  // This one should create a leader with its team, leader and opponent leader
         System.out.println("I am a leader now.");
     }
 
