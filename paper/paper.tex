@@ -300,7 +300,19 @@ The proposed design takes this simple concept and uses it to demonstrate a distr
 \end{figure}
 
 The leaders communicate the vote of their team to the opposing leader so that they may pass that result on to the peers of that team, as pictured in figure 1.
+
+By considering the fact that only the two leaders communicate about the votes between the two teams, then the system can easily break if one of the leaders creashes. 
+In order to avoid that and provide a more robust system we chose to implemet the Bully Algorithm on each of the players so they will be able to detect a leader crash if they do not receive a vote reply from them in a certain period of time.
+After that, they can easily call for an election on older processes than them and wait for a leader to be announced on a different period of time.
+If no leader is announced on that period of time or there are no older processes, then that process can declare itself leader to the rest of the team and the opponent leader.
+
 \section{Implementation}
+
+
+% Bully Implementation
+% All of the players keep track of their leader, the opponent leader and a priority list of their team.
+% In this case, they can easily use the list to start election on the processes older than them.
+
 
 \section{Evaluation}
 
