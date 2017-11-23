@@ -15,8 +15,6 @@ public interface GameInt extends Remote {
 
     public void setLeader() throws RemoteException;
 
-//    public void setLeader(GameInt leader,GameInt opponent) throws RemoteException;
-
     public void turnStarts() throws RemoteException;
 
     public void printBoard() throws RemoteException;

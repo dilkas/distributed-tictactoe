@@ -32,7 +32,6 @@ public abstract class Role{
     /** Returns true if the added player is a leader */
     public abstract boolean addPlayer(GameInt player) throws RemoteException;
 
-
     /** A leader overrides this, a regular player does nothing */
     public void broadcastPlay(int play) throws RemoteException {
     }
