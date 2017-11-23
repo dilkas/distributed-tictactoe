@@ -36,11 +36,12 @@ public class Game extends UnicastRemoteObject implements GameInt {
         myUrl = url;
         input = new Scanner(System.in);
         this.gameState = gameState;
-        role = new Player();
     }
 
     /** Ask the user to make a play and return it. */
     public int askForInput() throws RemoteException {
+        if(role instanceof Player)
+            role.schedule();
         int play = -1;
         while (!gameState.valid(play)) {
             System.out.print("Your sign: " + gameState.nextSign + ". Choose a number in [0, 8]: ");
@@ -53,19 +54,18 @@ public class Game extends UnicastRemoteObject implements GameInt {
     public boolean makePlay(int play) throws RemoteException {
         boolean gameOver = gameState.makePlay(play);
         System.out.println(gameState);
-        return gameOver;
-    }
-
-    /** End the game. */
-    public void endGame() throws RemoteException {
-        input.close();
-        try {
-            Naming.unbind(myUrl);
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (gameOver) {
+            input.close();
+            role.cancelTimer();
+            try {
+                Naming.unbind(myUrl);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            UnicastRemoteObject.unexportObject(this, true);
+            System.out.println("Game over.");
         }
-        UnicastRemoteObject.unexportObject(this, true);
-        System.out.println("Game over.");
+        return gameOver;
     }
 
     /** Paste the current game on screen. */
@@ -79,12 +79,8 @@ public class Game extends UnicastRemoteObject implements GameInt {
     }
 
     /** Role access classes */
-    public boolean addPlayer(GameInt player) throws RemoteException {
+    public GameInt addPlayer(GameInt player) throws RemoteException {
         return role.addPlayer(player);
-    }
-
-    public void setLeader(GameInt somePlayer) throws RemoteException {
-        role.setLeader(somePlayer);
     }
 
     public void turnStarts() throws RemoteException {
@@ -95,17 +91,27 @@ public class Game extends UnicastRemoteObject implements GameInt {
         role.broadcastPlay(play);
     }
 
-    /** Make this instance into a leader and initialise the team list. */
+    /** Update the leader reference. */
+    public void setLeader(GameInt somePlayer) throws RemoteException {
+        role.setLeader(somePlayer);
+    }
+
+    /** Make this instance into a leader with a given team. */
     public void setLeader(List<GameInt> team) throws RemoteException {
         this.role = new Leader(team);
         System.out.println("I am a leader now.");
     }
 
-    /** Make this instance into a leader of a brand new game. */
+    /** Make this instance into a leader and initialise the team list. */
     public void setLeader() throws RemoteException {
         List<GameInt> initialTeam = new LinkedList<>();
         initialTeam.add(this);
         setLeader(initialTeam);
+    }
+
+    /** Make this instance into a regular player and initialise the leader reference. */
+    public void setAsPlayer(GameInt leader) throws RemoteException {
+        this.role = new Player(leader);
     }
 
     public static void main(String[] args)throws IOException {
@@ -125,13 +131,15 @@ public class Game extends UnicastRemoteObject implements GameInt {
             GameInt server = (GameInt) Naming.lookup("//" + args[2] + ":" + PORT + "/" + args[1]);
             game = new Game(myUrl, server.getGameState());
             Naming.rebind(myUrl, game);
-            boolean leader = server.addPlayer(game); // am I a leader?
+            GameInt leader = server.addPlayer(game); // Add player to game & get leader
             System.out.println("Successfully connected to the server.");
-            if (leader) {
+            if (leader == null) {
                 game.setLeader();
                 game.addPlayer(server);
                 game.printBoard();
                 game.turnStarts();
+            } else {
+                game.setAsPlayer(leader);
             }
         } catch (NotBoundException e) {
             // Failed to connect. Must be player 1.

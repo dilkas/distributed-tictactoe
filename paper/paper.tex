@@ -172,10 +172,10 @@ This article describes a Distributed Multiplayer Tic Tac Toe software game writt
 \end{abstract}
 
 \section{Introduction}
-Coding is the main occupation of many people nowadays, and is also a
-past-time for many too. Most people get their first steps in writing code
+Coding is the main occupation of many people nowadays, and it is a
+past-time for many too. Most beginners get their first steps in writing code
 following the local single-threaded model. Often, it can be difficult for
-beginner programmers, or even those with more experience, to abstract the key
+new programmers, or even those with more experience, to abstract the key
 knowledge they have obtained using this model and then apply it in a different way.
 
 Distributed software requires a new look on the system – the number of devices
@@ -308,11 +308,26 @@ If no leader is announced on that period of time or there are no older processes
 
 \section{Implementation}
 
-
+The implementation follows the RMI distributed object model. A GameInt interface extends java.rmi.Remote and lists remote classes. 
+A Game class implements GameInt and extends the UnicastRemoteObject. It is an analogy for what a player knows and does during a game. 
+It provides an implementation for all the listed classes in the interface which include the functionality of requesting the player to make a play, 
+setting the leader of the game, several methods to interact with the Role of the player and a main method that connects to other game instances. 
+Currently, when running the game, the user passes it a local instance name and the name of another instance as arguments. Each instance then uses this information 
+to do an RMI Registry lookup and get a reference to the other client. The Role interface allows the application to differentiate between Leader and Player classes which extend it. 
+It utilises the State design pattern to allow players to seamlessly have their role changed – for example when the current leader disconnects. 
+A Leader is responsible of collecting the votes from all of the members in their team in the turnStarts() method. This is done asynchronously using
+a separate thread for each member – an instance of VoteThread. Each thread collects a vote from one assigned player then writes it into a corresponding position
+in a shared AtomicIntegerArray that they have all been passed by the Leader. This ensures the main Leader thread can then read these values. 
+Each Leader then informs all players in the game about the vote of his team. A Player instance represents a regular player that only must vote. 
+Each regular player also has a mechanism to detect if a leader has not contacted them to choose a play for too long. If a time-out is triggered, 
+a player calls for a new leader election. To avoid many simultaneous election calls, each regular player waits 5 minutes plus a randomised amount of time.
+All plays are recorded on a GameState object instance that acts as a game board. After each turn it checks if the game is over and relays this message to the leaders
+ which can then inform the members of their team.
+ 
+ 
 % Bully Implementation
 % All of the players keep track of their leader, the opponent leader and a priority list of their team.
 % In this case, they can easily use the list to start election on the processes older than them.
-
 
 \section{Evaluation}
 
@@ -326,10 +341,10 @@ practises. Similarly, a single-player-per-team distributed tic-tac-toe game in
 Java can be found online that does not comply with any design guidelines and 
 puts all functionality in a single class and as such, cannot teach students good 
 practice and has the potential of confusing the learner further about distributive 
-programming \cite{2}.
+programming \cite{MrWayFarOutYoutube15}.
 
 Separately, very in-depth materials that provide state-of-the-art practices can 
-be found \cite{1} but there is a high possibility that they might be incomprehensible 
+be found \cite{DBLP:conf/nsdi/BharambePS06} but there is a high possibility that they might be incomprehensible 
 to a beginner reader looking to tackle basic distributed concepts to begin with. 
 Furthermore, none of the similar implementations residing on the Internet take advantage 
 of the Java RMI API which must be considered a good starting point for distributed systems

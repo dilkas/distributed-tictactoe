@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicIntegerArray;
 public class Leader extends Role {
 
     // The local Game instance is here as well.
-    // Synchronize whenever using this list.
+    // Synchronise whenever using this list.
     // TODO: use a data structure that support concurrency and remove all the 'synchronized' keywords
     private List<GameInt> myTeam;
 
@@ -15,13 +15,14 @@ public class Leader extends Role {
         myTeam = team;
     }
 
-    public synchronized boolean addPlayer(GameInt player) throws RemoteException {
+    /** Adds a new player to the game. Returns null if the new player becomes the enemy leader and the  */
+    public synchronized GameInt addPlayer(GameInt player) throws RemoteException {
         if (leader == null) {
             leader = player;
-            return true;
+            return null;
         }
         myTeam.add(player);
-        return false;
+        return myTeam.get(0);
     }
 
     /** Collect the votes from the team and decide on a play. */
@@ -61,31 +62,23 @@ public class Leader extends Role {
         int play = maxIndices.get(new Random().nextInt(maxIndices.size()));
 
         leader.broadcastPlay(play);
-        broadcastPlay(play);
 
-        // Necessary because of the current implementation for ending the game.
-        // Might be unnecessary in the future.
-        if (leader != null)
+        // Broadcast the play. If the game is not over, start a new turn
+        if (!broadcastPlay(play))
             leader.turnStarts();
     }
 
     @Override
-    public synchronized void broadcastPlay(int play) throws RemoteException {
+    public synchronized boolean broadcastPlay(int play) throws RemoteException {
         // TODO: treat winning and losing differently
-        // TODO: (optional) start a new game or something?
-        // FIXME: regular players don't exit
         boolean gameOver = false;
         for (GameInt player : myTeam)
             gameOver = player.makePlay(play);
-        if (gameOver) {
-            leader = null;
-            if (myTeam.size() > 1)
-                for (GameInt player : myTeam.subList(1, myTeam.size() - 1))
-                    player.endGame();
-
-            // End the local game last. TODO: I don't thing this matters. Test and simplify if possible.
-            myTeam.get(0).endGame();
-            myTeam = null;
-        }
+        return gameOver;
     }
+
+	public void schedule() {
+		// Schedule Timer to record last response of each regular player on team
+		// If idle for more than x minutes, delete from team and inform other members to remove reference
+	}
 }
