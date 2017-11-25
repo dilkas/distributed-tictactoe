@@ -32,7 +32,7 @@ public class Leader extends Role {
         int teamSize = team.size();
         voteCollectors = new VoteThread[teamSize];
         for (GameInt player : team)
-            voteCollectors[counter++] = new VoteThread(player, votes);
+            voteCollectors[counter++] = new VoteThread(this, player, votes);
 
         for (VoteThread thread : voteCollectors)
             thread.start();
@@ -61,8 +61,13 @@ public class Leader extends Role {
         // Broadcast the play. If the game is not over, start a new turn
         GameInt opponentLeader = game.getOpponentLeader();
         opponentLeader.broadcastPlay(play);
-        if (!broadcastPlay(play))
-            opponentLeader.turnStarts();
+        if (!broadcastPlay(play)) {
+            try {
+                opponentLeader.turnStarts();
+            } catch (RemoteException e) {
+                // let the teammates handle this
+            }
+        }
     }
 
     @Override
@@ -73,8 +78,14 @@ public class Leader extends Role {
         return gameOver;
     }
 
-	public void schedule() {
-		// Schedule Timer to record last response of each regular player on team
-		// If idle for more than x minutes, delete from team and inform other members to remove reference
-	}
+    public void removeFromTeam(GameInt player) throws RemoteException {
+        game.removeFromTeam(player);
+        for (GameInt teamMember : game.getTeam())
+            teamMember.removeFromTeam(player);
+    }
+
+    public void schedule() {
+        // Schedule Timer to record last response of each regular player on team
+        // If idle for more than x minutes, delete from team and inform other members to remove reference
+    }
 }

@@ -120,6 +120,10 @@ public class Game extends UnicastRemoteObject implements GameInt {
         team.add(player);
     }
 
+    public void removeFromTeam(GameInt player) throws RemoteException {
+        team.remove(player);
+    }
+
     /** Role access classes */
     public boolean addPlayer(GameInt player) throws RemoteException {
         return role.addPlayer(player);
@@ -132,26 +136,29 @@ public class Game extends UnicastRemoteObject implements GameInt {
     // False indicates leader has no "greater" leaders
     // True indicates leader has started another election
     // No response assume other process crashed -- Use timeout when calling it
-    public boolean startElection(GameInt myGameInt) throws RemoteException {
+    public boolean startElection() throws RemoteException {
         // Start an election to my team
-        GameInt[] myTeam = (GameInt[]) team.toArray();
+        System.out.println("Election in progress.");
+        team.remove(leader);
+        GameInt[] myTeam = team.toArray(new GameInt[team.size()]);
         ArrayList<Boolean> responses = new ArrayList<>();
         responses.add(false); // No other leader
         int currentGameInt = 0;
 
-        while (myGameInt.hashCode() < myTeam[currentGameInt].hashCode() && currentGameInt < myTeam.length) {
+        while (hashCode() < myTeam[currentGameInt].hashCode() && currentGameInt < myTeam.length) {
             boolean anotherLeaderExists = responses.remove(0);
-            responses.add(myTeam[currentGameInt].startElection(myTeam[currentGameInt]) && anotherLeaderExists);
+            responses.add(myTeam[currentGameInt].startElection() && anotherLeaderExists);
             currentGameInt++;
         }
 
         // No more leaders set me as leader to the rest and the leader
         if (responses.get(0) == false) {
             for (GameInt player : myTeam)
-                player.setLeader(myGameInt);
-            opponentLeader.setLeader(myGameInt);
+                player.setLeader(this);
+            opponentLeader.setOpponentLeader(this);
         }
 
+        System.out.println("Election finished.");
         return responses.get(0);
     }
 

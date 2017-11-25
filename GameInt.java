@@ -32,11 +32,13 @@ public interface GameInt extends Remote {
 
     public void addToTeam(GameInt player) throws RemoteException;
 
+    public void removeFromTeam(GameInt player) throws RemoteException;
+
     public void setAsPlayer() throws RemoteException;
 
     public void turnStarts() throws RemoteException;
 
     public void printBoard() throws RemoteException;
 
-    public boolean startElection(GameInt thisGameInt) throws RemoteException;
+    public boolean startElection() throws RemoteException;
 }

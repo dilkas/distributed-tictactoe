@@ -13,6 +13,7 @@ public class Player extends Role {
     public Player(GameInt game) {
         super(game);
         timer = new Timer();
+        schedule();
     }
 
     public boolean addPlayer(GameInt player) throws RemoteException {
@@ -27,7 +28,8 @@ public class Player extends Role {
         Calendar cal=Calendar.getInstance(); // get today
         int hr = cal.get(Calendar.HOUR_OF_DAY);
         int mn = cal.get(Calendar.MINUTE);
-        mn = 5 * (mn / 5 + 1);	// round up to next 5 minute slot
+        //mn = 5 * (mn / 5 + 1);	// round up to next 5 minute slot
+        mn += 1;
         if (mn == 60) {
             hr = hr + 1;
             mn = 0;
@@ -40,15 +42,8 @@ public class Player extends Role {
         Random rand = new Random();
         int randInt = rand.nextInt(500) + 1;
         period = 5 * 60 * 1000 + randInt; // 5 minutes in milliseconds plus a random extension from 1 to 500ms
-        task = new ElectionRaiser();
+        task = new ElectionRaiser(game);
         timer.schedule(task, delay, period);
-    }
-
-    /** Task that is scheduled by the timer */
-    private class ElectionRaiser extends TimerTask {
-        public void run() {
-            //raiseElection();
-        }
     }
 
     public void cancelTimer() {
