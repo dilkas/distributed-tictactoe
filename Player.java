@@ -3,20 +3,20 @@ import java.util.Calendar;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.PriorityBlockingQueue;
 
 public class Player extends Role {
 
     private Timer timer;
     private TimerTask task;
 
-    public Player(GameInt leader) {
-        this.leader = leader;
+    public Player(GameInt game) {
+        super(game);
         timer = new Timer();
     }
 
-    public GameInt addPlayer(GameInt player) throws RemoteException {
-        leader.addPlayer(player);
-        return leader;
+    public boolean addPlayer(GameInt player) throws RemoteException {
+        return game.getLeader().addPlayer(player);
     }
 
     public void schedule() {

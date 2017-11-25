@@ -2,27 +2,25 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 
 public class Leader extends Role {
 
-    // The local Game instance is here as well.
-    // Synchronise whenever using this list.
-    // TODO: use a data structure that support concurrency and remove all the 'synchronized' keywords
-    private List<GameInt> myTeam;
-
-    public Leader(List<GameInt> team) {
-        myTeam = team;
+    public Leader(GameInt game) {
+        super(game);
     }
 
-    /** Adds a new player to the game. Returns null if the new player becomes the enemy leader and the  */
-    public synchronized GameInt addPlayer(GameInt player) throws RemoteException {
-        if (leader == null) {
-            leader = player;
-            return null;
+    /** Add a new player to the game. Make it into the enemy leader if there is no enemy leader, otherwise add it to
+        the team. Return true in the former case and false in the latter. */
+    public boolean addPlayer(GameInt player) throws RemoteException {
+        if (game.getOpponentLeader() == null) {
+            game.setOpponentLeader(player);
+            return true;
         }
-        myTeam.add(player);
-        return myTeam.get(0);
+        for (GameInt teamMember : game.getTeam())
+            teamMember.addToTeam(player);
+        return false;
     }
 
     /** Collect the votes from the team and decide on a play. */
@@ -30,12 +28,11 @@ public class Leader extends Role {
         AtomicIntegerArray votes = new AtomicIntegerArray(9);
         int counter = 0;
         VoteThread[] voteCollectors;
-        synchronized (this) {
-            int teamSize = myTeam.size();
-            voteCollectors = new VoteThread[teamSize];
-            for (GameInt player : myTeam)
-                voteCollectors[counter++] = new VoteThread(player, votes);
-        }
+        PriorityBlockingQueue<GameInt> team = game.getTeam();
+        int teamSize = team.size();
+        voteCollectors = new VoteThread[teamSize];
+        for (GameInt player : team)
+            voteCollectors[counter++] = new VoteThread(player, votes);
 
         for (VoteThread thread : voteCollectors)
             thread.start();
@@ -61,18 +58,17 @@ public class Leader extends Role {
         }
         int play = maxIndices.get(new Random().nextInt(maxIndices.size()));
 
-        leader.broadcastPlay(play);
-
         // Broadcast the play. If the game is not over, start a new turn
+        GameInt opponentLeader = game.getOpponentLeader();
+        opponentLeader.broadcastPlay(play);
         if (!broadcastPlay(play))
-            leader.turnStarts();
+            opponentLeader.turnStarts();
     }
 
     @Override
-    public synchronized boolean broadcastPlay(int play) throws RemoteException {
-        // TODO: treat winning and losing differently
+    public boolean broadcastPlay(int play) throws RemoteException {
         boolean gameOver = false;
-        for (GameInt player : myTeam)
+        for (GameInt player : game.getTeam())
             gameOver = player.makePlay(play);
         return gameOver;
     }

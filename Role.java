@@ -1,30 +1,34 @@
 import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.PriorityBlockingQueue;
 
 /** State design pattern */
 public abstract class Role {
 
-    // Leaders use this variable to store the enemy leader,
-    // regular players use this to store their leader
-    protected GameInt leader;
+    protected GameInt game;
 
-    /** Returns true if the added player is a leader */
-    public abstract GameInt addPlayer(GameInt player) throws RemoteException;
-
-    /** A leader overrides this, a regular player does nothing */
-    public boolean broadcastPlay(int play) throws RemoteException {
-        return false;
-    }
-
-    public void setLeader(GameInt somePlayer) {
-        leader = somePlayer;
+    public Role(GameInt game) {
+        this.game = game;
     }
 
     public abstract void schedule();
 
-    /** Regular players ignore this. */
+    /** Returns a reference to the leader of the team or null if the added player is the new leader */
+    public abstract boolean addPlayer(GameInt player) throws RemoteException;
+
+    // Default implementations for regular players - avoids testing whether an instance is a leader or not
+
+    public boolean broadcastPlay(int play) throws RemoteException {
+        return false;
+    }
+
     public void turnStarts() throws RemoteException {
     }
 
     public void cancelTimer() {
     }
+
 }

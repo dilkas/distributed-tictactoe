@@ -3,9 +3,11 @@ import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.concurrent.PriorityBlockingQueue;
 
 public class Game extends UnicastRemoteObject implements GameInt {
 
@@ -16,6 +18,9 @@ public class Game extends UnicastRemoteObject implements GameInt {
     /** Port number of the game. */
     private static final int PORT = 1099;
 
+    private GameInt leader;
+    private GameInt opponentLeader;
+    private PriorityBlockingQueue<GameInt> team;
     /** Holds the combined IP, port and server/client name address of this instance. */
     private String myUrl;
     private Scanner input;
@@ -23,18 +28,16 @@ public class Game extends UnicastRemoteObject implements GameInt {
     /** Identifies the role of this instance. */
     private Role role;
 
-
-    /** Constructors */
+    /** Constructor for the first player */
     public Game(String url) throws RemoteException {
-        myUrl = url;
-        input = new Scanner(System.in);
-        gameState = new GameState();
-        setLeader();
+        this(url, new GameState());
+        initialiseTeam();
     }
 
+    /** Constructor for everyone else */
     public Game(String url, GameState gameState) throws RemoteException {
-        myUrl = url;
         input = new Scanner(System.in);
+        myUrl = url;
         this.gameState = gameState;
     }
 
@@ -78,8 +81,47 @@ public class Game extends UnicastRemoteObject implements GameInt {
         return gameState;
     }
 
+    public GameInt getOpponentLeader() throws RemoteException {
+        return opponentLeader;
+    }
+
+    public void setOpponentLeader(GameInt leader) throws RemoteException {
+        opponentLeader = leader;
+    }
+
+    public GameInt getLeader() throws RemoteException {
+        return leader;
+    }
+
+    public void setLeader(GameInt leader) throws RemoteException {
+        this.leader = leader;
+    }
+
+    public void setLeader() throws RemoteException {
+        role = new Leader(this);
+        leader = this;
+        System.out.println("I am a leader now.");
+    }
+
+    public PriorityBlockingQueue<GameInt> getTeam() throws RemoteException {
+        return team;
+    }
+
+    public void initialiseTeam() throws RemoteException {
+        team = new PriorityBlockingQueue<GameInt>(11, new GameIntComparator());
+        team.add(this);
+    }
+
+    public void setTeam(PriorityBlockingQueue<GameInt> team) throws RemoteException {
+        this.team = team;
+    }
+
+    public void addToTeam(GameInt player) throws RemoteException {
+        team.add(player);
+    }
+
     /** Role access classes */
-    public GameInt addPlayer(GameInt player) throws RemoteException {
+    public boolean addPlayer(GameInt player) throws RemoteException {
         return role.addPlayer(player);
     }
 
@@ -87,31 +129,39 @@ public class Game extends UnicastRemoteObject implements GameInt {
         role.turnStarts();
     }
 
+    // False indicates leader has no "greater" leaders
+    // True indicates leader has started another election
+    // No response assume other process crashed -- Use timeout when calling it
+    public boolean startElection(GameInt myGameInt) throws RemoteException {
+        // Start an election to my team
+        GameInt[] myTeam = (GameInt[]) team.toArray();
+        ArrayList<Boolean> responses = new ArrayList<>();
+        responses.add(false); // No other leader
+        int currentGameInt = 0;
+
+        while (myGameInt.hashCode() < myTeam[currentGameInt].hashCode() && currentGameInt < myTeam.length) {
+            boolean anotherLeaderExists = responses.remove(0);
+            responses.add(myTeam[currentGameInt].startElection(myTeam[currentGameInt]) && anotherLeaderExists);
+            currentGameInt++;
+        }
+
+        // No more leaders set me as leader to the rest and the leader
+        if (responses.get(0) == false) {
+            for (GameInt player : myTeam)
+                player.setLeader(myGameInt);
+            opponentLeader.setLeader(myGameInt);
+        }
+
+        return responses.get(0);
+    }
+
     public void broadcastPlay(int play) throws RemoteException {
         role.broadcastPlay(play);
     }
 
-    /** Update the leader reference. */
-    public void setLeader(GameInt somePlayer) throws RemoteException {
-        role.setLeader(somePlayer);
-    }
-
-    /** Make this instance into a leader with a given team. */
-    public void setLeader(List<GameInt> team) throws RemoteException {
-        this.role = new Leader(team);
-        System.out.println("I am a leader now.");
-    }
-
-    /** Make this instance into a leader and initialise the team list. */
-    public void setLeader() throws RemoteException {
-        List<GameInt> initialTeam = new LinkedList<>();
-        initialTeam.add(this);
-        setLeader(initialTeam);
-    }
-
     /** Make this instance into a regular player and initialise the leader reference. */
-    public void setAsPlayer(GameInt leader) throws RemoteException {
-        this.role = new Player(leader);
+    public void setAsPlayer() throws RemoteException {
+        role = new Player(this);
     }
 
     public static void main(String[] args)throws IOException {
@@ -131,20 +181,27 @@ public class Game extends UnicastRemoteObject implements GameInt {
             GameInt server = (GameInt) Naming.lookup("//" + args[2] + ":" + PORT + "/" + args[1]);
             game = new Game(myUrl, server.getGameState());
             Naming.rebind(myUrl, game);
-            GameInt leader = server.addPlayer(game); // Add player to game & get leader
+            boolean meLeader = server.addPlayer(game); // am I a leader?
+            GameInt leader = server.getLeader();
             System.out.println("Successfully connected to the server.");
-            if (leader == null) {
+            if (meLeader) {
                 game.setLeader();
-                game.addPlayer(server);
+                game.setOpponentLeader(server.getLeader());
+                game.initialiseTeam();
                 game.printBoard();
                 game.turnStarts();
             } else {
-                game.setAsPlayer(leader);
+                game.setAsPlayer();
+                game.setLeader(leader);
+                game.setOpponentLeader(leader.getOpponentLeader());
+                game.setTeam(leader.getTeam());
             }
         } catch (NotBoundException e) {
             // Failed to connect. Must be player 1.
             System.out.println("I am the first player.");
             game = new Game(myUrl);
+            game.setLeader();
+            game.initialiseTeam();
             Naming.rebind(myUrl, game);
         }
     }
