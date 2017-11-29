@@ -151,6 +151,7 @@ public class Game extends UnicastRemoteObject implements GameInt {
             currentGameInt++;
         }
 
+        this.setLeader();
         // No more leaders set me as leader to the rest and the leader
         if (responses.get(0) == false) {
             for (GameInt player : myTeam)

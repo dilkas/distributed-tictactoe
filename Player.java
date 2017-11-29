@@ -36,7 +36,7 @@ public class Player extends Role {
         }
         cal.set(Calendar.HOUR_OF_DAY, hr);
         cal.set(Calendar.MINUTE, mn);
-        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.SECOND, cal.get(Calendar.SECOND));
         // milliseconds until next 5 minute boundary
         delay = cal.getTimeInMillis() - System.currentTimeMillis();
         Random rand = new Random();
