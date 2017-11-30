@@ -340,42 +340,40 @@ While Java RMI provides a simplified approach to object manipulation over distri
 
 The ongoing shortage of IPv4 addresses has led to a large proportion of machines on the Internet to be obscured by Network Address Translation (NAT) middleboxes. Machines hidden behind one of these middleboxes cannot be contacted directly without the use of techniques like hole punching, which is a significant problem for establishing an entirely decentralised peer-to-peer system.
 
-Hole punching for NAT traversal requires the use of an external, publicly-accessible proxy server to distribute the public-facing IP address and port combinations (addr:port) of NAT-obscured clients which want to establish a peer-to-peer session. This traversal method is used by many popular distributed applications such as multiplayer gaming, Skype, and peer-to-peer filesharing. This technique takes advantage of the behaviour of NAT middleboxes to create and maintain an 'open' addr:port combination - without this, a fully decentralised peer-to-peer session cannot be established.
+Hole punching for NAT traversal requires the use of an external, publicly-accessible proxy server to distribute the public-facing IP address and port combinations (addr:port) of NAT-obscured clients which want to establish a peer-to-peer session. This traversal method is used by many popular types of distributed applications such as multiplayer gaming, VoIP, and peer-to-peer file sharing. This technique takes advantage of the behaviour of NAT middleboxes to create and maintain an 'open' addr:port combination - without this, a fully decentralised peer-to-peer session cannot be established.
 
 As mentioned above, Java RMI uses TCP for its operations by default. While it is possible to modify the sockets created by RMI calls to use UDP instead, this requires extensive work using RMISocketFactory which is beyond the time allowed by the project.
 
-UDP is the more commonly used transport protocol for peer-to-peer applications - one socket can be used for both sending and receiving messages from multiple clients without the need for establishing a fixed connection between two endpoints. Although adjustments would need to be made to allow for unordered or lost messages, UDP would allow us to implement a topology with good fault tolerance and Internet-wide access, as displayed in figure (INCLUDE IMAGE HERE).
+UDP is the more commonly used transport protocol for peer-to-peer applications - one socket can be used for both sending and receiving messages from multiple clients without the need for establishing a fixed connection between two endpoints. Although adjustments would need to be made to allow for unordered or lost messages, UDP would allow us to implement a topology with robust fault tolerance and Internet-wide access:
 
-An alternative approach is to attempt TCP hole punching instead. This requires creating four TCP sockets with bound to the same local addr:port combination (ie. with SO\_REUSEADDR enabled) to establish a connection with a peer through a proxy server, as described in section 4 of a study by Ford, et al (INCLUDE CITATION HERE). Not only is this a significant overhead, with four sockets and multiple ports required for each peer a client wants to make contact with, it is also more complex to perform than the UDP equivalent; our simplified Python-based tests could not establish contact between peers using the instructions described in the Ford paper.
+\begin{figure}[h]
+	\includegraphics[width=\linewidth]{images/p2p-topology-3point.png}
+	\caption{Proposed Topology for UDP-based Version of System}
+	\label{fig:topology2}
+\end{figure}
 
-Without significant adjustments to the type of sockets used by Java RMI, a better understanding of TCP hole punching, or the universal adoption of IPv6, our application is currently limited to operating within local networks only. This is acceptable for its use as an educational tool, where it can be used within corporate or university networks freely, but the lack of NAT traversal largely excludes its use as a casual multiplayer game given that the vast majority of homes obscure several devices behind an ISP-provided NAT middlebox.
+An alternative approach is to attempt TCP hole punching. This requires creating four TCP sockets bound to the same local addr:port combination (ie. with SO\_REUSEADDR enabled) to establish a connection with a peer through a proxy server, as described in section 4 of a paper by Ford, et al \cite{ford_srisuresh_kegel_2005}. Not only is this a significant overhead, with four sockets required for each peer a client wants to make contact with, it is also more complex to perform than the UDP equivalent - our initial tests could not establish contact between peers using the instructions described in the Ford paper.
 
-While we are aiming to create a system without unnecessary complexity for educational purposes, NAT is a core component of the modern Internet - all networks programmers will encounter difficulties with it at some stage and having a solution to demonstrate as part of our application would have been very beneficial to people using it for educational purposes.
+Without significant adjustments to the type of sockets used by Java RMI, a better understanding of TCP hole punching, or the universal adoption of IPv6, our application is currently limited to operating within local networks only. This is acceptable for its use as an educational tool, where it can be used within corporate or university networks freely, but the lack of NAT traversal excludes its use as a casual multiplayer game given that the vast majority of homes obscure several devices behind an ISP-provided NAT middlebox.
+
+While we are aiming to create a system without unnecessary complexity, NAT is a core component of the modern Internet - all networks programmers will encounter difficulties with it at some stage, and having a solution to demonstrate as part of our application would have been very beneficial extra material for people using it for educational purposes.
 
 
 
 \section{Related Work}
-While other multiplayer distributed games already exist, they have not been
-created with this project’s task in mind and therefore do not serve the same
-purpose. They can be split into two categories – very unprofessional and too
-professional. For example, hobby implementations exist that deal with
-distributed problems in a bad fashion, promoting bad and incorrect programming 
-practises. Similarly, a single-player-per-team distributed tic-tac-toe game in 
-Java can be found online that does not comply with any design guidelines and 
-puts all functionality in a single class and as such, cannot teach students good 
-practice and has the potential of confusing the learner further about distributive 
-programming \cite{MrWayFarOutYoutube15}.
+While other distributed multiplayer games already exist, they do not serve the same
+purpose as our project. Existing products can be split into two categories: too simple and too complex. Examples of the former generally deal with the difficulties of distributed systems in a bad fashion, promoting questionable design and programming practices. One specific example of this is a YouTube guide to building a single player-per-team distributed tic-tac-toe game in Java \cite{MrWayFarOutYoutube15} - while the material is accessible for inexperienced networks programmers, it puts all functionality in a single class and does not comply with any design guidelines. As such, this resource has the potential to further confuse learners about programming distributed systems when they try to read more complex documentation which does obey software engineering design principles.
 
-Separately, very in-depth materials that provide state-of-the-art practices can 
-be found \cite{DBLP:conf/nsdi/BharambePS06} but there is a high possibility that they might be incomprehensible 
-to a beginner reader looking to tackle basic distributed concepts to begin with. 
-Furthermore, none of the similar implementations residing on the Internet take advantage 
-of the Java RMI API which must be considered a good starting point for distributed systems
-learners for it to be taught as part of our degree and is a requirement for this
-project. Instead, they use different sets of other technologies which can
-further confuse their reader and introduce a steeper learning curve.
+The latter category consists of resources which provide details of state-of-the-art practices and advanced optimisations. An example of this is a version of the game Quake II, modified to run multiplayer sessions more efficiently over a distributed system \cite{DBLP:conf/nsdi/BharambePS06}. This is excellent material for an experienced programmer looking to refine their skills, but daunting to a newcomer due to a high level of complexity in both networking concepts and game logic.
+
+Furthermore, none of the similar implementations residing on the Internet make use of the Java RMI API. Many distributed systems projects use other technologies, such as C or Rust, which have a far steeper learning curve than Java, and are not as commonly taught in universities or used as frequently in enterprise environments.
+
+In addition to being based on a widely-known language, Java RMI has the additional benefit of simplifying processes such as marshalling and socket creation. Our project takes advantage of this to allow people to learn about concepts in distributed systems programming without worrying about added complexities such as objects becoming corrupted due to incorrect formatting, or incorrect use of transport protocols.
 
 \section{Conclusions and Future Work}
+%make the bully algorithm work when both leaders crash at the same time
+%team balancing
+%randomised moves not implemented
 
 % trigger a \newpage just before the given reference
 % number - used to balance the columns on the last page
