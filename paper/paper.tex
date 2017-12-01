@@ -168,33 +168,18 @@
 \maketitle
 
 \begin{abstract}
-This article describes a Distributed Multiplayer Tic Tac Toe software game written in Java using the RMI API. While previous implementations attempting to serve a similar purpose exist, none of them boast good design or efficiency and neither of them deliver the same functionality. The developed piece of software allows clients to play a game of Tic Tac Toe locally - but with a twist. Players are separated into teams and decide on what the next move should be by voting. The implementation is derived from a design that follows the distributed applications guidelines and is prepared to handle corner cases such as client disconnects for example.
+This article describes a Distributed Multiplayer Tic-Tac-Toe software game written in Java using the RMI API. While previous implementations attempting to serve a similar purpose exist, none of them boast good design or efficiency, and neither of them deliver the same functionality. This project allows clients to play a game of Tic-Tac-Toe locally, with a twist: players collecively decide on what the next move should be by voting in teams. The implementation is derived from a design that follows the distributed applications guidelines and is prepared to handle corner cases such as client disconnects.
 \end{abstract}
 
 \section{Introduction}
-Coding is the main occupation of many people nowadays, and it is a
-past-time for many too. Most beginners get their first steps in writing code
-following the local single-threaded model. Often, it can be difficult for
-new programmers, or even those with more experience, to abstract the key
-knowledge they have obtained using this model and then apply it in a different way.
+Programming is very much an in-demand profession in the current job market, as well as being a popular hobby. Most beginners take their first steps in writing code
+following a simple, single-threaded model with zero distribution. It is often difficult for new programmers to abstract the key knowledge they have obtained to a point where they can independently apply it to a different scenario.
 
-Distributed software requires a new look on the system – the number of devices
-has gone up and with it so have the number of processes, concerns and complexities.
-Some concepts have now changed and need to be dealt with differently; One such
-example if this would be mutual exclusion. We believe programs that serve as examples and
-focus on simple local tasks turned into distributed ones can help many people
-trying to make this step with a hands-on experience of what they are preparing
-for. Seeing theory in practice is a proven technique and there is evidence for
-this in every university course that features practical work. This is especially
-true where games are concerned, proving to be an effective means of communicating 
-programming methods and techniques in an engaging way
-\cite{Kiniry:2011:VG:1984674.1984681}. For this reason, the team has decided to
-take a simple, well known game and develop it into a distributed system; Tic Tac
-Toe played as a peer-to-peer, team-based gaming system where the players are
-organised into teams and required to vote on moves for their team.
+Distributed software engineering principles are evolving quickly – the number of Internet-enabled devices has rapidly increased in recent years, and the level of complexity in creating programs to use these interconnected systems effectively has increased along with it. This complexity arises from core concepts such as co-ordinating resource sharing and fault tolerance - these are challenging concepts to learn for a novice programmer, but they are integral to creating a reliable and effective distributed system. 
 
-By refraining from introducing additional complexity as part of the goal of the project, and 
-allowing the users to see the distributed nature of the software being demonstrated via a simple game, the focus is shifted towards the implications of the distributive aspects of the system and the way they are handled. The finished product can serve to entertain the end users, as well as increase their curiosity and insight about computers and distributed systems. Using Tic Tac Toe as a foundation to demonstrate a distributed system benefits from both the simplicity and familiarity of the game itself, meaning no complex rulesets or in-depth mechanisms need be explained to the users, allowing the distributed nature to be a novel way of experiencing a widely known game.
+We believe that programs which serve as examples of turning familiar, relatively simple local applications into distributed ones are key to bridging this gap, providing a hands-on introduction to a field which is becoming ever more important with the deployment of novel concepts like fog computing. The sheer number of programming tutorials available on the internet shows that there is a demand for model solutions for educational purposes. Games in particular have proven to be an effective means of communicating programming methods and techniques in an engaging way \cite{Kiniry:2011:VG:1984674.1984681}. For this reason, we have decided to take a simple, well known game and develop it into a distributed system: Tic-Tac-Toe played as a peer-to-peer, team-based gaming system where the players are organised into teams and required to vote the moves their team will make.
+
+By refraining from introducing unnecessary complexity into the project, and allowing the users to see an example of distributed software being demonstrated via a simple game, the focus is shifted towards the implications of the distributive aspects of the system and the way they are handled. Using Tic-Tac-Toe as a foundation to demonstrate a distributed system benefits from both the simplicity and familiarity of the game itself, meaning no complex rulesets or in-depth mechanisms need be explained to the users, allowing the distributed nature to be a novel way of experiencing a widely known game.
 
 % An example of a floating figure using the graphicx package.
 % Note that \label must occur AFTER (or within) \caption.
@@ -367,14 +352,16 @@ In addition to being based on a widely-known language, Java RMI has the addition
 \section{Conclusions and Future Work}
 %make the bully algorithm work when both leaders crash at the same time
 %team balancing
-%randomised moves not implemented
-The produced software serves as a good demonstration of a distributed game. The use of a simple, well known game idea turned into a distributed, multiplayer experience highlights the benefits and complexities associated with distributed systems, and allows the technology to be demonstrated in an inclusive format, allowing users of all levels to make use of the software without additional complications added.
 
-For future additions or design reconsiderations, Distributed Tic Tac Toe could benefit from some changes. These changes include making the software more robust and granting the users an improved playing experience by addressing certain network issues and gameplay elements. 
+The produced software serves as a good demonstration of a distributed game. The use of a simple, well known game turned into a distributed, multiplayer experience highlights the benefits and complexities associated with distributed systems, and allows the technology to be demonstrated in an accessible format, allowing users of all levels to make use of the software without being discouraged by an overwhelming level of complexity.
 
-In the softwares current state, leaders are appointed using the bully algorithm when a new election is required. However, there is no support for failure of communication from both leaders, i.e. if both leaders were to crash at the same time. Although the likelihood is slim, addressing the possibility of this scenario playing out would make the system more robust and prevent frustration for the players.
+Distributed Tic-Tac-Toe could benefit from some changes in future iterations, including making the software more robust and granting the users an improved playing experience by addressing certain network issues and gameplay elements.
 
-To improve the gameplay experience, players of both teams should be on an even playing field. To ensure this is consistent throughout the duration of a match, some form of automatic team balancing is recommended, allowing each team to receive votes in as even amount as possible. The gameplay experience could be improved further still by addressing the scenario of an even number of votes being cast by team members. The possibility of this happening is certainly high, and the recommendation is that the leader randomly selects between the moves chosen by the team members.
+In the project's current state, leaders are appointed using the bully algorithm when one machine acting as a leader fails. However, there is no support for failure of communication from both leaders, i.e. if both leaders were to crash at the same time. Although the likelihood of this occurring is slim, this possibility still needs to be addressed to improve player experience and to improve the standard of our product as an educational resource.
+
+Another improvement which we would make in further iterations would be some form of automatic team balancing - currently, no replacement team members are allocated to an underpopulated team if several peers drop out of a session. Another situation which needs to be addressed is the scenario of all members of a team leaving a game before it is complete, an event which currently has no resolution.
+
+The simplicity of Tic-Tac-Toe, combined with NAT traversal issues, limits our project's appeal as a multiplayer game to people with no interest in programming. However, our commitment to obeying software engineering design principles in Java makes this a valuable educational tool for beginners wanting hands-on experience with engineering a distributed, peer-to-peer application.
 
 % trigger a \newpage just before the given reference
 % number - used to balance the columns on the last page
