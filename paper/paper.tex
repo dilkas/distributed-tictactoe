@@ -295,7 +295,7 @@ The implementation follows the RMI distributed object model. A GameInt interface
 
 A Game class implements GameInt and extends the UnicastRemoteObject. It is an analogy for what a player knows and does during a game. It provides an implementation for all the listed classes in the interface which include the functionality of requesting the player to make a play, setting the leader of the game, several methods to interact with the Role of the player, and a main method that connects to other game instances.
  
-Currently, when running the game, the user supplies a local instance name and the name of another instance as command line arguments. Each instance then uses this information to do an RMI Registry lookup and get a reference to the other client.
+Currently, when running the game, the user supplies a local instance name and the name of another instance as command line arguments. Each instance then uses this information to do an RMI Registry lookup and get a reference to the other peer to attempt to establish a session. This allows multiple different sessions to run simultaneously on the same network without interference - ideal for educational use, where multiple groups are likely to be working on the same internal network.
 
 The Role interface allows the application to differentiate between Leader and Player classes which extend it. It utilises the State design pattern to allow players to seamlessly have their role changed when required (eg. if the current leader disconnects).
 
