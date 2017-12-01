@@ -1,0 +1,6 @@
+Usage:
+python server - creates base server instance on localhost
+python clients [number] - creates [number] of clients to connect to server instance
+Usage:
+python server - creates base server instance on localhost
+python clients [number] - creates [number] of clients to connect to server instance
