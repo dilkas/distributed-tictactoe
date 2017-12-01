@@ -287,7 +287,7 @@ The proposed design takes this simple concept and uses it to demonstrate a distr
 
 \begin{figure}[h]
 	\includegraphics[width=\linewidth]{images/DAS-topology.png}
-	\caption{Topology for Distributed Tic Tac Toe}
+	\caption{Topology for Distributed Tic-Tac-Toe}
 	\label{fig:topology1}
 \end{figure}
 
@@ -324,7 +324,12 @@ session. This allows multiple different sessions to run simultaneously
 on the same network without interference --- ideal for educational use, where multiple groups are likely to be working on the same internal network.
 
 % TODO: reference for state design pattern
-The \texttt{Role} interface allows the application to differentiate between \texttt{Leader} and \texttt{Player} classes which extend it. It utilises the State design pattern to allow players to seamlessly have their role changed when required (eg. if the current leader disconnects).
+The \texttt{Role} interface allows the application to differentiate
+between \texttt{Leader} and \texttt{Player} classes which extend
+it. It utilises the State design pattern
+\cite{DBLP:books/daglib/0078642} to allow players to seamlessly have
+their role changed when required (eg. if the current leader
+disconnects).
 
 A Leader is responsible for collecting votes from all of the members
 in their team in the \texttt{turnStarts()} method. This is done
@@ -349,7 +354,7 @@ Elections use the ``Bully'' algorithm to determine which \texttt{Player} instanc
 
 \begin{figure}[h]
 	\includegraphics[width=\linewidth]{images/DAS-topology-election.png}
-	\caption{Proposed Topology for UDP-based Version of System} % TODO: is this caption out of date?
+	\caption{Topology changes after a leader disconnects}
 	\label{fig:topology-election}
 \end{figure}
 
