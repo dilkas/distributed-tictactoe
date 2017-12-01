@@ -273,9 +273,9 @@ By refraining from introducing unnecessary complexity into the project, and allo
 % \fnbelowfloat command of the stfloats package.
 
 \section{System Design}
-Tic Tac Toe is a simple game played on a grid of 3x3, consisting of two players. One player uses an “X” marker and the other player uses an “O” marker to select a grid space to occupy. The objective of the game is to take turns until one player manages to occupy three grid spaces in a straight line, be it horizontal, vertical or diagonal.
+Tic-Tac-Toe is a simple game played on a 3x3 grid, consisting of two players. One player uses an “X” marker and the other player uses an “O” marker occupy spaces in the grid. The objective of the game is to take turns until one player manages to occupy three grid spaces in a straight line, be it horizontal, vertical or diagonal.
 
-The proposed design takes this simple concept and uses it to demonstrate a distributed system, whereby the two “players” are instead two teams of up to 5 players, which take turns to vote on where their team should place their markers. Each team has a designated "leader" which communicates data with their team's peers, and the opposing team's "leader" to synchronise current gameplay state.
+The proposed design takes this simple concept and uses it to demonstrate a distributed system, whereby each player is assigned to one of two teams, each of which takes turns to vote on where their team should place their markers. Each team has a designated leader which communicates data with their team's peers, and the opposing team's leader to synchronise current gameplay state.
 
 \begin{figure}[h]
 	\includegraphics[width=\linewidth]{images/DAS-topology.png}
@@ -283,31 +283,41 @@ The proposed design takes this simple concept and uses it to demonstrate a distr
 	\label{fig:topology1}
 \end{figure}
 
-Upon initialising the game, the player will take a note of their address and port number. As the game is played on a local network, the player will attempt to connect to any other existing nodes on the network. If none are found, then the client will initialise a new game instance and set itself as one of the leaders.
+Upon initialising the game, the player will take a note of their address and port number. As the game is played on a local network, the player will attempt to connect to all other existing nodes on the network. If none are found, then the client will initialise a new game instance and set itself as one of the leaders.
 
-When other players attempt to check for existing players on the network and successfully find them, it will get the current game state, check if it is one of the leaders, print the board in text format and prepare for the turn.
+If a player manages to connect to another machine on the local network (ie. that machine is paricipating in an active game session), they will retrieve the current game state, check if they are one of the leaders, print the current board state, and prepare for the turn.
 
-The leaders update a common game state at the end of each event before broadcasting the game state to all team members. Players are told by the leaders when completion of the game occurs.
+The leaders update a common game state at the end of each event before broadcasting this updated game state to all team members. Players are told by the leaders when the game, and therefore the session, ends.
 
 \section{Implementation}
 
 The implementation follows the RMI distributed object model. A GameInt interface extends java.rmi.Remote and lists remote classes.
 
-A Game class implements GameInt and extends the UnicastRemoteObject. It is an analogy for what a player knows and does during a game. It provides an implementation for all the listed classes in the interface which include the functionality of requesting the player to make a play, setting the leader of the game, several methods to interact with the Role of the player and a main method that connects to other game instances.
+A Game class implements GameInt and extends the UnicastRemoteObject. It is an analogy for what a player knows and does during a game. It provides an implementation for all the listed classes in the interface which include the functionality of requesting the player to make a play, setting the leader of the game, several methods to interact with the Role of the player, and a main method that connects to other game instances.
  
-Currently, when running the game, the user passes it a local instance name and the name of another instance as arguments. Each instance then uses this information to do an RMI Registry lookup and get a reference to the other client. The Role interface allows the application to differentiate between Leader and Player classes which extend it. 
+Currently, when running the game, the user supplies a local instance name and the name of another instance as command line arguments. Each instance then uses this information to do an RMI Registry lookup and get a reference to the other client.
 
-It utilises the State design pattern to allow players to seamlessly have their role changed – for example when the current leader disconnects. 
+The Role interface allows the application to differentiate between Leader and Player classes which extend it. It utilises the State design pattern to allow players to seamlessly have their role changed when required (eg. if the current leader disconnects).
 
-A Leader is responsible of collecting the votes from all of the members in their team in the turnStarts() method. This is done asynchronously using a separate thread for each member – an instance of VoteThread. Each thread collects a vote from one assigned player then writes it into a corresponding position in a shared AtomicIntegerArray that they have all been passed by the Leader. This ensures the main Leader thread can then read these values. 
+A Leader is responsible for collecting the votes from all of the members in their team in the turnStarts() method. This is done asynchronously using a separate thread for each member – an instance of VoteThread. Each thread collects a vote from one assigned player then writes it into a corresponding position in a shared AtomicIntegerArray that they have all been passed by the leader. This ensures the main leader thread can then read these values.
 
-Each Leader then informs all players in the game about the vote of his team. A Player instance represents a regular player that only must vote. 
+Each Leader then informs all players in the game about the most popular vote chosen by their team. In the event of two or more moves receiving an equal number of votes, a leader will randomly select  A Player instance represents a regular player that can only vote, it cannot independently generate and broadcast a new game state. 
 
-Each regular player also has a mechanism to detect if a leader has not contacted them to choose a play for too long. If a time-out is triggered, a player calls for a new leader election. To avoid many simultaneous election calls, each regular player waits 5 minutes plus a randomised amount of time.
+Each regular player also has a mechanism to detect if a leader has not contacted them to choose a play for too long. If a time-out is triggered, a player calls for a new leader election. To avoid several simultaneous election calls, each regular player waits five minutes plus a smaller randomised amount of time.
 
-All plays are recorded on a GameState object instance that acts as a game board. After each turn it checks if the game is over and relays this message to the leaders which can then inform the members of their team.
- 
- 
+Elections use the bully algorithm to determine which Player instance will become the new Leader instance for their team. The other team members and the leader of the opposing team are all informed of the new leader, creating an altered topology to compensate for the failure:
+
+\begin{figure}[h]
+	\includegraphics[width=\linewidth]{images/DAS-topology-election.png}
+	\caption{Proposed Topology for UDP-based Version of System}
+	\label{fig:topology-election}
+\end{figure}
+
+If the failed machine joins the game session again, it will not automatically regain Leader status, instead participating as a regular Player instance.
+
+All plays are recorded on a GameState object instance which acts as a game board. After each turn, GameState checks if the game is over and relays this message to the leaders which can then inform the members of their team.
+
+
 % Bully Implementation
 % All of the players keep track of their leader, the opponent leader and a priority list of their team.
 % In this case, they can easily use the list to start election on the processes older than them.
@@ -330,7 +340,7 @@ UDP is the more commonly used transport protocol for peer-to-peer applications -
 \begin{figure}[h]
 	\includegraphics[width=\linewidth]{images/p2p-topology-3point.png}
 	\caption{Proposed Topology for UDP-based Version of System}
-	\label{fig:topology2}
+	\label{fig:topology-udp}
 \end{figure}
 
 An alternative approach is to attempt TCP hole punching. This requires creating four TCP sockets bound to the same local addr:port combination (ie. with SO\_REUSEADDR enabled) to establish a connection with a peer through a proxy server, as described in section 4 of a paper by Ford, et al \cite{ford_srisuresh_kegel_2005}. Not only is this a significant overhead, with four sockets required for each peer a client wants to make contact with, it is also more complex to perform than the UDP equivalent - our initial tests could not establish contact between peers using the instructions described in the Ford paper.
