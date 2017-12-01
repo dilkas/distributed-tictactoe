@@ -168,7 +168,7 @@
 \maketitle
 
 \begin{abstract}
-This article describes a Distributed Multiplayer Tic Tac Toe software game written in Java using the RMI API. While previous implementations attempting to serve a similar purpose exist, none of them boast good design or efficiency and neither of them deliver the same functionality. The developed piece of software allows clients to play locally or globally a game of the classic tic tac toe - but with a twist. Players are separated into teams and decide on what the next move should be by voting. The implementation is derived from a design that follows the distributed applications guidelines and is prepared to handle corner cases such as client disconnects for example.
+This article describes a Distributed Multiplayer Tic Tac Toe software game written in Java using the RMI API. While previous implementations attempting to serve a similar purpose exist, none of them boast good design or efficiency and neither of them deliver the same functionality. The developed piece of software allows clients to play a game of Tic Tac Toe locally - but with a twist. Players are separated into teams and decide on what the next move should be by voting. The implementation is derived from a design that follows the distributed applications guidelines and is prepared to handle corner cases such as client disconnects for example.
 \end{abstract}
 
 \section{Introduction}
@@ -298,23 +298,19 @@ The proposed design takes this simple concept and uses it to demonstrate a distr
 	\label{fig:topology1}
 \end{figure}
 
-The leaders communicate the vote of their team to the opposing leader so that they may pass that result on to the peers of that team, as pictured in figure 1.
+Upon initialising the game, the player will take a note of their address and port number. As the game is played on a local network, the player will attempt to connect to any other existing nodes on the network. If none are found, then the client will initialise a new game instance and set itself as one of the leaders.
 
-By considering the fact that only the two leaders communicate about the votes between the two teams, then the system can easily break if one of the leaders crashes. 
+When other players attempt to check for existing players on the network and successfully find them, it will get the current game state, check if it is one of the leaders, print the board in text format and prepare for the turn.
 
-In order to avoid that and provide a more robust system we chose to implemet the Bully Algorithm on each of the players so they will be able to detect a leader crash if they do not receive a vote reply from them in a certain period of time.
-
-After that, they can easily call for an election on older processes than them and wait for a leader to be announced on a different period of time.
-
-If no leader is announced on that period of time or there are no older processes, then that process can declare itself leader to the rest of the team and the opponent leader.
+The leaders update a common game state at the end of each event before broadcasting the game state to all team members. Players are told by the leaders when completion of the game occurs.
 
 \section{Implementation}
 
 The implementation follows the RMI distributed object model. A GameInt interface extends java.rmi.Remote and lists remote classes.
 
-A Game class implements GameInt and extends the UnicastRemoteObject. It is an analogy for what a player knows and does during a game. It provides an implementation for all the listed classes in the interface which include the functionality of requesting the player to make a play, setting the leader of the game, several methods to interact with the Role of the player and a main method that connects to other game instances. 
-C
-urrently, when running the game, the user passes it a local instance name and the name of another instance as arguments. Each instance then uses this information to do an RMI Registry lookup and get a reference to the other client. The Role interface allows the application to differentiate between Leader and Player classes which extend it. 
+A Game class implements GameInt and extends the UnicastRemoteObject. It is an analogy for what a player knows and does during a game. It provides an implementation for all the listed classes in the interface which include the functionality of requesting the player to make a play, setting the leader of the game, several methods to interact with the Role of the player and a main method that connects to other game instances.
+ 
+Currently, when running the game, the user passes it a local instance name and the name of another instance as arguments. Each instance then uses this information to do an RMI Registry lookup and get a reference to the other client. The Role interface allows the application to differentiate between Leader and Player classes which extend it. 
 
 It utilises the State design pattern to allow players to seamlessly have their role changed – for example when the current leader disconnects. 
 
@@ -358,8 +354,6 @@ Without significant adjustments to the type of sockets used by Java RMI, a bette
 
 While we are aiming to create a system without unnecessary complexity, NAT is a core component of the modern Internet - all networks programmers will encounter difficulties with it at some stage, and having a solution to demonstrate as part of our application would have been very beneficial extra material for people using it for educational purposes.
 
-
-
 \section{Related Work}
 While other distributed multiplayer games already exist, they do not serve the same
 purpose as our project. Existing products can be split into two categories: too simple and too complex. Examples of the former generally deal with the difficulties of distributed systems in a bad fashion, promoting questionable design and programming practices. One specific example of this is a YouTube guide to building a single player-per-team distributed tic-tac-toe game in Java \cite{MrWayFarOutYoutube15} - while the material is accessible for inexperienced networks programmers, it puts all functionality in a single class and does not comply with any design guidelines. As such, this resource has the potential to further confuse learners about programming distributed systems when they try to read more complex documentation which does obey software engineering design principles.
@@ -374,6 +368,13 @@ In addition to being based on a widely-known language, Java RMI has the addition
 %make the bully algorithm work when both leaders crash at the same time
 %team balancing
 %randomised moves not implemented
+The produced software serves as a good demonstration of a distributed game. The use of a simple, well known game idea turned into a distributed, multiplayer experience highlights the benefits and complexities associated with distributed systems, and allows the technology to be demonstrated in an inclusive format, allowing users of all levels to make use of the software without additional complications added.
+
+For future additions or design reconsiderations, Distributed Tic Tac Toe could benefit from some changes. These changes include making the software more robust and granting the users an improved playing experience by addressing certain network issues and gameplay elements. 
+
+In the softwares current state, leaders are appointed using the bully algorithm when a new election is required. However, there is no support for failure of communication from both leaders, i.e. if both leaders were to crash at the same time. Although the likelihood is slim, addressing the possibility of this scenario playing out would make the system more robust and prevent frustration for the players.
+
+To improve the gameplay experience, players of both teams should be on an even playing field. To ensure this is consistent throughout the duration of a match, some form of automatic team balancing is recommended, allowing each team to receive votes in as even amount as possible. The gameplay experience could be improved further still by addressing the scenario of an even number of votes being cast by team members. The possibility of this happening is certainly high, and the recommendation is that the leader randomly selects between the moves chosen by the team members.
 
 % trigger a \newpage just before the given reference
 % number - used to balance the columns on the last page
