@@ -370,8 +370,30 @@ connections to time out.
 % In this case, they can easily use the list to start election on the processes older than them.
 
 \section{Performance Evaluation}
+We created a script, \texttt{createpeers.py}, to automate the creation of peers for testing system performance. This can create a base instance to start the game, and can then create any number of peers which will attempt to connect to the base instance.
+
+We decided to investigate how the ``Bully'' election algorithm scales with the number of peers on a team (fig. 3).
+
+\begin{figure}[h]
+	\includegraphics[width=\linewidth]{images/election-chart.png}
+	\caption{Average time taken to respond to process a response from each peer in an election call}
+	\label{fig:election-img}
+\end{figure}
+
+The general trend is that the election caller will take a longer time, on average, to process each election vote from each peer on its team. However, the results for 15 and 20 nodes are anomalous. There are several potential causes for this: another process on the machine running these tests blocking one of the voting threads, election threads blocking other threads from accessing a shared resource, and refused connections.
+
+A considerable number of nodes failed during these elections, with this number varying between 4 failures in the 15 node run and 11 in the 30 node run (fig. 4).
+
+\begin{figure}[h]
+	\includegraphics[width=\linewidth]{images/failures.png}
+	\caption{Number of node failures caused by java.rmi.ConnectException}
+	\label{fig:failure-img}
+\end{figure}
 
 
+These failures were all caused by \texttt{java.rmi.ConnectException}, which was thrown in response to refused TCP connections. Java RMI calls require an exclusive TCP connection to a client, which is not suited to the ``Bully'' algorithm. Although a new leader is still elected from the suriving nodes, these failures strongly suggest that modifying RMI to use UDP sockets or \texttt{SO\_REUSEADDR}-enabled TCP sockets is required for a more failure-resistant system. This idea is covered in more detail below in Architecture Evaluation.
+
+The next step would be to repeat these tests in a scenario closer to how this project is likely to be used in an educational setting such as a university lab exercise: several different machines each running between one and three instances of the game. We would record how many failures are caused by \texttt{java.rmi.ConnectException} in comparison to running all instances on \texttt{localhost} as well as comparing the average time taken to process votes.
 
 \section{Architecture Evaluation}
 While Java RMI provides a simplified approach to object manipulation over distributed systems, it does force the use of TCP sockets by default. The reliable, ordered delivery of data provided by TCP is desirable for distributed applications, however, this choice of transport protocol does have significant implications for application topology.
@@ -390,7 +412,7 @@ UDP is the more commonly used transport protocol for peer-to-peer applications -
 	\label{fig:topology-udp}
 \end{figure}
 
-An alternative approach is to attempt TCP hole punching. This requires creating four TCP sockets bound to the same local addr:port combination (ie. with SO\_REUSEADDR enabled) to establish a connection with a peer through a proxy server, as described in section 4 of a paper by Ford, et al \cite{ford_srisuresh_kegel_2005}. Not only is this a significant overhead, with four sockets required for each peer a client wants to make contact with, it is also more complex to perform than the UDP equivalent - our initial tests could not establish contact between peers using the instructions described in the Ford paper.
+An alternative approach is to attempt TCP hole punching. This requires creating four TCP sockets bound to the same local addr:port combination (ie. with \texttt{SO\_REUSEADDR} enabled) to establish a connection with a peer through a proxy server, as described in section 4 of a paper by Ford, et al \cite{ford_srisuresh_kegel_2005}. Not only is this a significant overhead, with four sockets required for each peer a client wants to make contact with, it is also more complex to perform than the UDP equivalent - our initial tests could not establish contact between peers using the instructions described in the Ford paper.
 
 Without significant adjustments to the type of sockets used by Java RMI, a better understanding of TCP hole punching, or the universal adoption of IPv6, our application is currently limited to operating within local networks only. This is acceptable for its use as an educational tool, where it can be used within corporate or university networks freely, but the lack of NAT traversal excludes its use as a casual multiplayer game given that the vast majority of homes obscure several devices behind an ISP-provided NAT middlebox.
 
