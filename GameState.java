@@ -1,5 +1,6 @@
 import java.io.Serializable;
 
+/** Represents the state of the game. Each player has an instance of this class. */
 public class GameState implements Serializable {
 
     /** Serial version UID to avoid warning. */

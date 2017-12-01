@@ -70,6 +70,7 @@ public class Leader extends Role {
         }
     }
 
+    /** Send information about a player to all members of my team (including myself) */
     @Override
     public boolean broadcastPlay(int play) throws RemoteException {
         boolean gameOver = false;
@@ -78,14 +79,10 @@ public class Leader extends Role {
         return gameOver;
     }
 
+    /** Remove a player from the team (in case of a detected disconnect) */
     public void removeFromTeam(GameInt player) throws RemoteException {
         game.removeFromTeam(player);
         for (GameInt teamMember : game.getTeam())
             teamMember.removeFromTeam(player);
-    }
-
-    public void schedule() {
-        // Schedule Timer to record last response of each regular player on team
-        // If idle for more than x minutes, delete from team and inform other members to remove reference
     }
 }

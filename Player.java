@@ -5,6 +5,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.PriorityBlockingQueue;
 
+/** A regular player who is not a leader. This class is only meant to hold functionality different from the Leader class */
 public class Player extends Role {
 
     private Timer timer;
@@ -20,6 +21,7 @@ public class Player extends Role {
         return game.getLeader().addPlayer(player);
     }
 
+    /** (Re)set the timer that waits to start an election */
     public void schedule() {
         if (task != null)
             task.cancel();

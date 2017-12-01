@@ -14,12 +14,11 @@ public abstract class Role {
         this.game = game;
     }
 
-    public abstract void schedule();
-
-    /** Returns a reference to the leader of the team or null if the added player is the new leader */
+    /** Return true if the added player becomes a leader */
     public abstract boolean addPlayer(GameInt player) throws RemoteException;
 
-    // Default implementations for regular players - avoids testing whether an instance is a leader or not
+  // Default empty implementations so that we don't have to check whether an instance of Role is actually
+  // Player or Leader
 
     public boolean broadcastPlay(int play) throws RemoteException {
         return false;
@@ -29,6 +28,9 @@ public abstract class Role {
     }
 
     public void cancelTimer() {
+    }
+  
+    public void schedule() {
     }
 
 }
